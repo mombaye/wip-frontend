@@ -3,6 +3,9 @@ import { useRef } from 'react';
 import { Upload, Plus } from 'lucide-react';
 import { fetchAccountMappings, uploadAccountMappingFile, createAccountMapping, updateAccountMapping, deleteAccountMapping } from '@/services/accountMappingService';
 import AccountMappingModal from './AccountMappingModal';
+import { toast } from 'react-toastify';
+import { showUploadSummaryToast } from './UploadSummaryToast';
+import UploadSummaryModal from './UploadSummaryModal';
 
 
 const AccountMappingTab = () => {
@@ -11,22 +14,28 @@ const AccountMappingTab = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMapping, setEditingMapping] = useState<any | null>(null);
+  const [uploading, setUploading] = useState(false); // ⬅️ Nouveau
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [uploadSummary, setUploadSummary] = useState<any | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
+  
+  const loadData = async () => {
       try {
         const result = await fetchAccountMappings();
         setData(result);
       } catch (error) {
-        console.error("Erreur chargement données :", error);
+        toast.error("❌ Erreur chargement données :");
       } finally {
         setLoading(false);
       }
-    };
+  };
+  
+  
+
+
+   useEffect(() => {
     loadData();
   }, []);
-
-
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -36,12 +45,13 @@ const AccountMappingTab = () => {
   if (file) {
     try {
       const result = await uploadAccountMappingFile(file);
-      alert("✅ Fichier importé avec succès");
-      console.log("📥 Réponse backend :", result);
+      await loadData()
+      showUploadSummaryToast(result, "✅ Project Mapping importé");
+      setUploadSummary(result);         // ⬅️ conserve les données
+      setSummaryModalOpen(true);  
       // TODO: reload table
     } catch (error) {
-      console.error("❌ Erreur d'import :", error);
-      alert("Erreur lors de l'import du fichier.");
+      toast.error("❌ Erreur lors de l'import");
     }
   }
 };
@@ -51,6 +61,7 @@ const handleAddMapping = async (newData: any) => {
     await createAccountMapping(newData);
     const updated = await fetchAccountMappings();
     setData(updated);
+    toast.success("✅ Mapping ajouté");
   } catch (error) {
     alert("Erreur lors de la création.");
     console.error(error);
@@ -63,8 +74,9 @@ const handleEditMapping = async (updatedData: any) => {
     const refreshed = await fetchAccountMappings();
     setData(refreshed);
     setEditingMapping(null);
+    toast.success("✅ Mapping ajouté");
   } catch (error) {
-    alert("Erreur de mise à jour.");
+    toast.error("❌ Une erreur s'est produite");
     console.error(error);
   }
 };
@@ -77,8 +89,9 @@ const handleDelete = async (id: number) => {
     await deleteAccountMapping(id);
     const refreshed = await fetchAccountMappings();
     setData(refreshed);
+    toast.success("✅ Mapping ajouté");
   } catch (error) {
-    alert("Erreur lors de la suppression.");
+    toast.error("❌ Une erreur s'est produite");
     console.error(error);
   }
 };
@@ -103,7 +116,38 @@ const handleDelete = async (id: number) => {
             className="flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-200 border border-gray-300"
           >
             <Upload size={16} />
-            Importer un fichier
+
+             {uploading ? (
+                <>
+                  <svg
+                    className="w-4 h-4 animate-spin text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3.5-3.5L12 1v4a8 8 0 100 16v-4l-3.5 3.5L12 23v-4a8 8 0 01-8-8z"
+                    ></path>
+                  </svg>
+                  <span>Import...</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={16} />
+                  Importer fichier
+                </>
+              )}
+            
           </button>
 
           <input
@@ -130,7 +174,31 @@ const handleDelete = async (id: number) => {
 
       <div className="overflow-x-auto">
         {loading ? (
-          <p className="text-sm text-gray-500 italic">Chargement...</p>
+           <div className="flex justify-center items-center h-60">
+            <div className="flex flex-col items-center gap-2 text-blue-700">
+              <svg
+                className="animate-spin h-8 w-8 text-blue-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3.5-3.5L12 1v4a8 8 0 100 16v-4l-3.5 3.5L12 23v-4a8 8 0 01-8-8z"
+                ></path>
+              </svg>
+              <span className="text-sm">Chargement des mappings...</span>
+            </div>
+          </div>
         ) : data.length === 0 ? (
           <p className="text-sm text-gray-500 italic">Aucun compte trouvé.</p>
         ) : (
@@ -183,6 +251,15 @@ const handleDelete = async (id: number) => {
           </table>
         )}
       </div>
+      {uploadSummary && (
+        <UploadSummaryModal
+          isOpen={summaryModalOpen}
+          onClose={() => setSummaryModalOpen(false)}
+          data={uploadSummary}
+          title="Détail import Project Mapping"
+        />
+      )}
+
 
     </div>
   );

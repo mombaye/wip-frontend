@@ -10,7 +10,7 @@ interface Props {
 }
 
 const roles = ['admin_local', 'admin_regional', 'finance_local', 'finance_regional'];
-const countries = ['Sénégal', 'Côte d’Ivoire', 'Mali'];
+const countries = ['SN', 'CIV', 'ML', 'MR'];
 
 
 const UserFormModal = ({ isOpen, onClose, onSubmit, initialData }: Props) => {
