@@ -19,3 +19,16 @@ export const changePasswordService = async (token: string, newPassword: string) 
   );
   return response.data;
 };
+
+
+// services/authService.ts
+export const refreshTokenService = async () => {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include', // ⬅️ si tu utilises le cookie httpOnly côté backend
+  });
+
+  if (!response.ok) throw new Error('Refresh token invalide');
+  return await response.json(); // { access_token: '...' }
+};
+

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/calculs-wip', label: 'Calculs du WIP', icon: Calculator },
+  { path: '/calculs-wip', label: 'Generate Audit Trial', icon: Calculator },
   { path: '/closing-check', label: 'Closing Check', icon: CheckCircle },
   { path: '/wip', label: 'WIP', icon: BarChart3, soon: true },
   { path: '/mapping', label: 'Mapping', icon: Map },
@@ -14,7 +14,13 @@ const menuItems = [
   { path: '/parametres', label: 'Paramètres', icon: Settings },
 ];
 
-const Sidebar = () => {
+
+type SidebarProps = {
+  toLogOut: () => void; // fonction sans argument qui ne retourne rien
+};
+
+
+const Sidebar: React.FC<SidebarProps> = ({ toLogOut }) => {
   const location = useLocation();
   const { isOpen, toggle } = useSidebar();
 
@@ -81,6 +87,7 @@ const Sidebar = () => {
               <p className="text-sm text-gray-700">user@example.com</p>
               <button
                 className="mt-2 text-xs text-red-500 hover:bg-red-100 px-2 py-1 rounded flex items-center justify-center mx-auto gap-1 transition"
+                 onClick={toLogOut}
               >
                 <LogOut size={14} />
                 Déconnexion

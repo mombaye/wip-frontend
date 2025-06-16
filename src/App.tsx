@@ -9,8 +9,10 @@ import UsersPage from '@/pages/UsersPage';
 import MappingPage from '@/pages/MappingPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CalculWIPPage from './pages/CalculWIPPage';
+import CalculWIPPage from './pages/AuditTrial';
 import { SidebarProvider } from './contexts/SidebarContext';
+import ClosingCheckPage from './pages/ClosingCheckPage';
+import WIPPage from './pages/WIPPage';
 
 
 const App = () => {
@@ -61,7 +63,7 @@ const App = () => {
                   element={
                     <PrivateRoute>
                       <DashboardLayout>
-                        <div>Closing Check</div>
+                        <ClosingCheckPage />
                       </DashboardLayout>
                     </PrivateRoute>
                   }
@@ -71,7 +73,7 @@ const App = () => {
                   element={
                     <PrivateRoute>
                       <DashboardLayout>
-                        <div>WIP</div>
+                        <WIPPage />
                       </DashboardLayout>
                     </PrivateRoute>
                   }
