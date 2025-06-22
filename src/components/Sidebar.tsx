@@ -69,11 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ toLogOut }) => {
             >
               <Icon size={20} />
               {isOpen && label}
-              {soon && isOpen && (
-                <span className="absolute right-4 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-                  Bientôt
-                </span>
-              )}
+              
             </Link>
           ))}
         </nav>

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/Input';
+import { Card, CardContent } from '@/ui/card';
+import { Input } from '@/ui/Input';
 import { FileSpreadsheet, Eye, EyeOff } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/ui/button';
 
 type WIPEntry = {
   [key: string]: any; // pour simplifier ici

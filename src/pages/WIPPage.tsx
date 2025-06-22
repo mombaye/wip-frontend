@@ -2,6 +2,8 @@ import { useState } from 'react';
 import CogsTable from '@/components/cogs/CogsTable';
 import InvoicesTable from '@/components/invoices/InvoicesTable';
 
+import WIPTable from '@/components/wip/WIPTable';
+
 const tabItems = [
   'Summary',
   'WIP',
@@ -41,6 +43,8 @@ const WIPPage = () => {
         <CogsTable />
       ) : activeTab === 'Facturation' ? (
         <InvoicesTable />
+      ) : activeTab === 'WIP' ? (
+        <WIPTable />
       ) : (
         <div className="text-sm text-gray-600">
           Contenu de l&apos;onglet <strong>{activeTab}</strong> ici...

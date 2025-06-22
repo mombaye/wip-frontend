@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import * as XLSX from "xlsx";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/Input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/ui/dropdown-menu";
 import { toast } from "react-toastify";
 import { saveFinalCogs } from "@/services/cogsService";
 import { ArrowUp, ArrowDown, Search, Filter } from "lucide-react";

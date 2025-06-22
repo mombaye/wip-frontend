@@ -17,7 +17,7 @@ import api from '@/services/api';
 import { confirmAlert } from 'react-confirm-alert';
 import CogsSection from '@/components/cogs/CogsSection';
 import ConflictModal from '@/components/modals/ConflictModal';
-import { Button as AppButton } from '@/components/ui/button'; // si tu veux remplacer tous les Button MUI plus tard
+import { Button as AppButton } from '@/ui/button'; // si tu veux remplacer tous les Button MUI plus tard
 import CogsReviewTable from '@/components/cogs/CogsReviewTable';
 import {
   Select,
@@ -25,14 +25,14 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from '@/components/ui/select';
+} from '@/ui/select';
 
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from "@/components/ui/tabs";
+} from "@/ui/tabs";
 import InvoiceReviewTable from '@/components/invoices/InvoiceReviewTableProps';
 import { Info } from 'lucide-react';
 import { useBoolean } from '@/hooks/useBoolean';

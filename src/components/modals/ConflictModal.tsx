@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '@mui/material';
-import { Button } from '@/components/ui/button'; // ✅ Ton composant Tailwind
+import { Button } from '@/ui/button'; // ✅ Ton composant Tailwind
 import { CheckCircle } from 'lucide-react';
 
 type ConflictModalProps = {

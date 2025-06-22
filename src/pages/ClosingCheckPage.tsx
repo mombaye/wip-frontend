@@ -4,7 +4,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/components/ui/tabs';
+} from '@/ui/tabs';
 // assure-toi d'avoir un composant Tabs ou adapte ic
 import AuditTrailTable from '@/components/closing-check/AuditTrailTable';
 

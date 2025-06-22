@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from "react";
 import * as XLSX from "xlsx";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/Input";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/ui/dropdown-menu";
 import { ArrowUp, ArrowDown, Search } from "lucide-react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/ui/select";
 
 interface InvoiceEntry {
   project: string;
