@@ -36,6 +36,10 @@ import {
 import InvoiceReviewTable from '@/components/invoices/InvoiceReviewTableProps';
 import { Info } from 'lucide-react';
 import { useBoolean } from '@/hooks/useBoolean';
+import WIPReviewTable from '@/components/wip/WIPReviewTable';
+import { ProgressBar } from '@/components/tools/ProgressBar';
+import { ErrorModal } from '@/components/modals/ErrorModal';
+import { BatchErrorReport, BatchSaveError } from '@/types/types';
 
 
 function downloadCSV(data: any[], filename = 'closing_check_export.csv') {
@@ -44,6 +48,7 @@ function downloadCSV(data: any[], filename = 'closing_check_export.csv') {
     keys.join(','),
     ...data.map((row) => keys.map((k) => `"${row[k] ?? ''}"`).join(',')),
   ];
+  
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -83,6 +88,22 @@ function CustomToolbar({ rows }: { rows: any[] }) {
   );
 }
 
+type COGS = { [key: string]: any };      // Ou adapte avec ton vrai type
+type Invoice = { [key: string]: any };
+type WIP = { [key: string]: any };
+
+type BatchSaveResult = {
+  saved: number;
+  updated: number;
+  errors: { entry: any; error: string }[];
+};
+type BatchResponse = {
+  cogs: BatchSaveResult;
+  invoices: BatchSaveResult;
+  wip: BatchSaveResult;
+  message: string;
+};
+
 const steps = [
   { id: 1, label: 'Upload' },
   { id: 2, label: 'Mapping' },
@@ -91,6 +112,7 @@ const steps = [
   { id: 5, label: 'COGS Générés' },
 ];
 
+const BATCH_SIZE = 10000; 
 
 const CalculWIPPage = () => {
   const width = useAdaptiveWidth();
@@ -113,6 +135,19 @@ const CalculWIPPage = () => {
   const [availableSheets, setAvailableSheets] = useState<string[]>([]);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [tabLoading, setTabLoading] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('cogs');
+  const [showFinalSuccess, setShowFinalSuccess] = useState(false);
+  const [finalSaving, setFinalSaving] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [allErrors, setAllErrors] = useState<BatchErrorReport[]>([]);
+  // ... dans CalculWIPPage
+  const [importSessionId, setImportSessionId] = useState(null);
+
+
+
+
 
 
   const handleFileUpload = async (file: File) => {
@@ -199,7 +234,63 @@ const CalculWIPPage = () => {
     if (row.year && row.month) return `${row.month}-${row.year}`;
     return null;
   };
-    
+    function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+      const results: T[][] = [];
+      for (let i = 0; i < array.length; i += chunkSize) {
+        results.push(array.slice(i, i + chunkSize));
+      }
+      return results;
+    }
+
+    // ... (garde tes imports et useState)
+    const saveAllChunks = async (
+      setErrorModalOpen: (b: boolean) => void,
+      setAllErrors: (errors: BatchErrorReport[]) => void,
+      setFinalSaving: (b: boolean) => void,
+      setProgress: (n: number) => void,
+      setShowFinalSuccess: (b: boolean) => void,
+      importSessionId: string | null
+    ) => {
+      if (!importSessionId) {
+        toast.error("Aucune session d'import trouvée.");
+        return;
+      }
+      setFinalSaving(true);
+      setProgress(0);
+
+      try {
+        // Un seul appel, ultra rapide (pas de batch)
+        const { data } = await api.post('/upload/cogs/save-batch', { import_session_id: importSessionId }, {
+          headers: { 'Content-Type': 'application/json' },
+          // timeout: 180000, // optionnel
+        });
+
+        // Gestion du report d'erreurs/retour
+        const allErrors = [
+          ...(data.cogs?.errors || []),
+          ...(data.invoices?.errors || []),
+          ...(data.wip?.errors || []),
+        ];
+        setProgress(1);
+
+        if (allErrors.length > 0) {
+          toast.warn(`⚠️ ${allErrors.length} erreurs sur certains lots. Consultez le rapport.`);
+          setAllErrors(allErrors);
+          setErrorModalOpen(true);
+        } else {
+          toast.success('✅ Toutes les données ont bien été sauvegardées !');
+          setShowFinalSuccess(true);
+        }
+
+      } catch (err: any) {
+        toast.error(`Erreur lors de la sauvegarde : ${err?.message || err}`);
+      } finally {
+        setFinalSaving(false);
+        setProgress(1);
+      }
+    };
+
+        
     const handleImportExistingExcelFile = (file: File, type: 'audit' | 'cogs' | 'invoices') => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -249,6 +340,7 @@ const CalculWIPPage = () => {
       try {
         setUploading(true);
         const result = await uploadExistingData(file, type, sheetName);
+        console.log("Upload result:", result);
         toast.success(result.message || "✅ Données importées !");
         setCogsData(result.data || {});
         setCurrentStep(5);
@@ -313,7 +405,8 @@ const CalculWIPPage = () => {
          setGeneratingCogs(true);
         const response = await api.post(`/upload/closing-checks/bulk-save?${queryString}`, finalPayload);
         toast.success("✅ Données sauvegardées !");
-        setCogsData(response.data);
+        setImportSessionId(response.data.import_session_id);
+        setCogsData(response.data.data);
         setCurrentStep(5); // étape COGS
       } catch (err) {
         toast.error('❌ Erreur lors de la sauvegarde');
@@ -566,24 +659,74 @@ const CalculWIPPage = () => {
 
         {currentStep === 5 && (
           <div className="mt-4">
-            <Tabs defaultValue="cogs" className="w-full">
+            <div className="flex justify-end mb-4">
+              <AppButton
+                  variant="default"
+                  onClick={async () => {
+                    await saveAllChunks(
+                      setErrorModalOpen,
+                      setAllErrors,
+                      setFinalSaving,
+                      setProgress,
+                      setShowFinalSuccess,
+                      importSessionId // <-- C’est tout !
+                    );
+                  }}
+                  className="gap-2"
+                  disabled={finalSaving}
+                >
+                  {finalSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={16} />}
+                  Sauvegarder les données générées
+              </AppButton>
+
+
+            </div>
+
+            <Tabs value={selectedTab} onValueChange={(value) => {
+              setTabLoading(true);
+              setSelectedTab(value);
+              setTimeout(() => setTabLoading(false), 700); // simulate load
+            }} className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="cogs">🧮 COGS</TabsTrigger>
                 <TabsTrigger value="invoices">🧾 Facturation</TabsTrigger>
+                <TabsTrigger value="wip">📊 WIP</TabsTrigger>
               </TabsList>
+              {tabLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full flex justify-center items-center py-12"
+              >
+                <Loader2 className="animate-spin text-blue-600" size={40} />
+                <span className="ml-3 text-blue-700 font-medium text-sm">Chargement du contenu...</span>
+              </motion.div>
+            )}
+
               <TabsContent value="cogs">
-                <CogsReviewTable cogsData={cogsData || {}} />
+                {!tabLoading && <CogsReviewTable cogsData={cogsData || {}} />}
               </TabsContent>
+
               <TabsContent value="invoices">
-                
+                {!tabLoading && (
                   <InvoiceReviewTable invoiceData={
                     Object.fromEntries(
                       Object.entries(cogsData).map(([month, result]) => [month, result.invoices || []])
                     )
                   } />
-          
-
+                )}
               </TabsContent>
+
+              <TabsContent value="wip">
+                {!tabLoading && (
+                  <WIPReviewTable wipData={
+                    Object.fromEntries(
+                      Object.entries(cogsData).map(([month, result]) => [month, result.wip || []])
+                    )
+                  } />
+                )}
+              </TabsContent>
+
             </Tabs>
           </div>
         )}
@@ -597,7 +740,96 @@ const CalculWIPPage = () => {
         />
       )}
 
+        {finalSaving && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-white bg-opacity-70 backdrop-blur-sm z-50 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center gap-5 p-8 bg-white shadow-2xl rounded-xl border border-blue-100"
+            >
+              <Loader2 className="animate-spin text-blue-600" size={50} />
+              <div className="text-lg text-blue-900 font-semibold text-center">
+                Sauvegarde finale en cours...<br />
+                Veuillez patienter pendant l’enregistrement de toutes les données générées.
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
 
+        {finalSaving && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-white/80 backdrop-blur-md z-50 flex flex-col items-center justify-center"
+          >
+            <div className="bg-white p-8 rounded-xl border border-blue-100 shadow-xl flex flex-col items-center gap-6 w-[340px]">
+              <Loader2 className="animate-spin text-blue-600 mb-2" size={36} />
+              <div className="text-lg text-blue-900 font-semibold mb-2 text-center">
+                Sauvegarde massive en cours…<br />
+                Cette opération peut prendre plusieurs minutes.<br />
+              </div>
+             
+              <span className="text-xs text-gray-500 mt-2">Merci de patienter...</span>
+            </div>
+          </motion.div>
+        )}
+
+
+        {showFinalSuccess && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white px-8 py-10 rounded-2xl shadow-2xl flex flex-col items-center border border-blue-200 max-w-md w-full"
+            >
+              <CheckCircle className="text-green-500 mb-3" size={64} />
+              <h2 className="text-2xl font-bold mb-2 text-blue-900">Processus terminé avec succès !</h2>
+              <p className="text-base text-gray-700 mb-5 text-center">
+                Toutes les données COGS, Factures et WIP ont bien été sauvegardées.<br />
+                Vous pouvez maintenant revenir à l’accueil ou exporter votre rapport.
+              </p>
+              <div className="flex gap-4">
+                <AppButton
+                  variant="default"
+                  onClick={() => {
+                    setShowFinalSuccess(false);
+                    window.location.href = "/"; // ou vers la page d’accueil/dash
+                  }}
+                >
+                  Retour à l’accueil
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  onClick={() => {
+                    // Ajoute ici ta fonction d’export si besoin, sinon retire ce bouton
+                  }}
+                >
+                  Exporter le rapport
+                </AppButton>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+
+        {errorModalOpen && (
+          <ErrorModal
+            open={errorModalOpen}
+            onClose={() => setErrorModalOpen(false)}
+            errors={allErrors}
+          />
+        )}
 
       </div>
     </div>

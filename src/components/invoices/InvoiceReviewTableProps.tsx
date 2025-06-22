@@ -10,13 +10,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 
 interface InvoiceEntry {
   project: string;
-  category: string; // always "Sales"
-  opening: number;
-  opening_local: number;
-  current_po: number;
+  currency: string; // always "Sales"
+  amount_po_currency: number;
+  amount_local_currency: number;
   current_local: number;
+  current_invoice: number;
   accumulated: number;
-  accumulated_local: number;
 }
 
 interface InvoiceReviewTableProps {
@@ -148,12 +147,12 @@ const InvoiceReviewTable: React.FC<InvoiceReviewTableProps> = ({ invoiceData }) 
               </th>
             </tr>
             <tr className="bg-blue-50 text-gray-800">
-              <SortableTh label="PO Curr." valueKey="opening" />
-              <SortableTh label="Local Curr." valueKey="opening_local" />
-              <SortableTh label="PO Curr." valueKey="current_po" />
-              <SortableTh label="Local Curr." valueKey="current_local" />
+              <SortableTh label="PO Curr." valueKey="amount_po_currency" />
+              <SortableTh label="Local Curr." valueKey="amount_local_currency" />
+              <SortableTh label="PO Curr." valueKey="current_invoice" />
+              <SortableTh label="Local Curr." valueKey="current_invoice" />
               <SortableTh label="PO Curr." valueKey="accumulated" />
-              <SortableTh label="Local Curr." valueKey="accumulated_local" />
+              <SortableTh label="Local Curr." valueKey="accumulated" />
             </tr>
           </thead>
           <tbody>
@@ -168,12 +167,12 @@ const InvoiceReviewTable: React.FC<InvoiceReviewTableProps> = ({ invoiceData }) 
               <tr key={idx} className="even:bg-blue-50/30">
                 <td className="border px-3 py-2 font-medium">{row.project}</td>
                 <td className="border px-3 py-2 text-center">-</td>
-                <td className="border px-3 py-2 text-right">{row.opening?.toLocaleString() ?? "-"}</td>
-                <td className="border px-3 py-2 text-right">{row.opening_local?.toLocaleString() ?? "-"}</td>
-                <td className="border px-3 py-2 text-right">{row.current_po?.toLocaleString() ?? "-"}</td>
-                <td className="border px-3 py-2 text-right">{row.current_local?.toLocaleString() ?? "-"}</td>
+                <td className="border px-3 py-2 text-right">{row.amount_local_currency}</td>
+                <td className="border px-3 py-2 text-right">{row.amount_po_currency}</td>
+                <td className="border px-3 py-2 text-right">{row.current_invoice}</td>
+                <td className="border px-3 py-2 text-right">{row.current_invoice}</td>
                 <td className="border px-3 py-2 text-right">{row.accumulated?.toLocaleString() ?? "-"}</td>
-                <td className="border px-3 py-2 text-right">{row.accumulated_local?.toLocaleString() ?? "-"}</td>
+                <td className="border px-3 py-2 text-right">{row.accumulated?.toLocaleString() ?? "-"}</td>
               </tr>
             ))}
           </tbody>

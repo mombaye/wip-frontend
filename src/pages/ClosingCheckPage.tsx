@@ -5,7 +5,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-// assure-toi d'avoir un composant Tabs ou adapte ici
+// assure-toi d'avoir un composant Tabs ou adapte ic
+import AuditTrailTable from '@/components/closing-check/AuditTrailTable';
 
 const tabItems = [
   { id: 'audit', label: 'Audit trail' },
@@ -40,7 +41,7 @@ const ClosingCheckPage = () => {
       </div>
 
       <div className="mt-4">
-        {activeTab === 'audit' && <div>Contenu de l&apos;onglet Audit trail</div>}
+        {activeTab === 'audit' && <AuditTrailTable />}
         {activeTab === 'expense' && <div>Contenu de l&apos;onglet Building & General Expense</div>}
         {activeTab === 'budget' && <div>Contenu de l&apos;onglet Budget</div>}
         {activeTab === 'pl' && <div>Contenu de l&apos;onglet P&amp;L</div>}

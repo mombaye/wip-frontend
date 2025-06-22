@@ -1,16 +1,13 @@
 import { useState } from 'react';
+import CogsTable from '@/components/cogs/CogsTable';
+import InvoicesTable from '@/components/invoices/InvoicesTable';
 
 const tabItems = [
   'Summary',
   'WIP',
   'Non WIP',
-  'Facturation',
-  'WIP Part Etrangere',
-  'WIP old',
-  'WIP old Clean',
-  'Non WIP Clean',
-  'Wip Clean',
   'COGS',
+  'Facturation',
   'audit trail',
   'Project & Exchange rate'
 ];
@@ -40,9 +37,15 @@ const WIPPage = () => {
         </div>
       </div>
 
-      <div className="mt-4">
-        <div className="text-sm text-gray-600">Contenu de l&apos;onglet <strong>{activeTab}</strong> ici...</div>
-      </div>
+      {activeTab === 'COGS' ? (
+        <CogsTable />
+      ) : activeTab === 'Facturation' ? (
+        <InvoicesTable />
+      ) : (
+        <div className="text-sm text-gray-600">
+          Contenu de l&apos;onglet <strong>{activeTab}</strong> ici...
+        </div>
+      )}
     </div>
   );
 };

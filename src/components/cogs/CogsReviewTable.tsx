@@ -74,6 +74,7 @@ function getPreviousMonth(currentMonth: string): string {
 }
 
 export const CogsReviewTable: React.FC<CogsReviewTableProps> = ({ cogsData }) => {
+
   // UI state
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");

@@ -49,3 +49,18 @@ export const uploadExistingData = async (
   const response = await api.post('/upload/existing-data', formData);
   return response.data;
 };
+
+
+/// ✅ Récupérer l'audit trail avec filtre date
+export const fetchAuditTrail = async (
+  startDate: string,
+  endDate: string
+) => {
+  const response = await api.get('/audit-trail/', {
+    params: {
+      start_date: startDate,
+      end_date: endDate,
+    },
+  });
+  return response.data;
+};
